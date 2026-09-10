@@ -1,0 +1,1 @@
+globalThis.__RSC_MANIFEST=(globalThis.__RSC_MANIFEST||{});globalThis.__RSC_MANIFEST["/api/wac/complete/route"]={"moduleLoading":{"prefix":"/_next/"},"ssrModuleMapping":{},"edgeSSRModuleMapping":{},"clientModules":{},"entryCSSFiles":{"C:\\APLIKASI ANDROID WAC DIGITAL\\backend\\src\\app\\api\\wac\\complete\\route":[]},"rscModuleMapping":{},"edgeRscModuleMapping":{}};

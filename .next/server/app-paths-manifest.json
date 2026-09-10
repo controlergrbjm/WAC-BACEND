@@ -1,0 +1,21 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/_global-error/page": "app/_global-error/page.js",
+  "/api/auth/login/route": "app/api/auth/login/route.js",
+  "/api/history/route": "app/api/history/route.js",
+  "/api/dashboard/stats/route": "app/api/dashboard/stats/route.js",
+  "/api/notifications/route": "app/api/notifications/route.js",
+  "/api/profile/edit/route": "app/api/profile/edit/route.js",
+  "/api/profile/password/route": "app/api/profile/password/route.js",
+  "/api/profile/route": "app/api/profile/route.js",
+  "/api/sa/valet-results/route": "app/api/sa/valet-results/route.js",
+  "/api/wac/check-in/route": "app/api/wac/check-in/route.js",
+  "/api/wac/batch-checklist/route": "app/api/wac/batch-checklist/route.js",
+  "/api/wac/check-out/route": "app/api/wac/check-out/route.js",
+  "/api/wac/complete/route": "app/api/wac/complete/route.js",
+  "/api/wac/pins/route": "app/api/wac/pins/route.js",
+  "/api/wac/ready-out/route": "app/api/wac/ready-out/route.js",
+  "/api/wac/signature/route": "app/api/wac/signature/route.js",
+  "/api/wac/submit-detail/route": "app/api/wac/submit-detail/route.js",
+  "/api/wac/vehicles/route": "app/api/wac/vehicles/route.js"
+}

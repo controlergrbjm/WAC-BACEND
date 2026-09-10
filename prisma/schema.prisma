@@ -1,0 +1,161 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model users {
+  id         String   @id @default(uuid())
+  nik        String   @unique
+  name       String
+  password   String
+  role       Role     @default(VALET)
+  dealer     String?
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  
+  sessions   wac_sessions[]
+  logs       activity_logs[]
+}
+
+enum Role {
+  ADMINISTRATOR
+  SERVICE_ADVISOR
+  VALET
+  FOREMAN
+  MANAGER
+}
+
+model customers {
+  id         String   @id @default(uuid())
+  name       String
+  phone      String?
+  email      String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  vehicles   vehicles[]
+}
+
+model vehicles {
+  id           String   @id @default(uuid())
+  customer_id  String
+  customer     customers @relation(fields: [customer_id], references: [id])
+  license_plate String  @unique
+  model        String
+  color        String?
+  vin          String?
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  sessions     wac_sessions[]
+}
+
+model master_categories {
+  id         String   @id @default(uuid())
+  name       String
+  icon       String?
+  created_at DateTime @default(now())
+  
+  check_items master_check_items[]
+}
+
+model master_check_items {
+  id          String   @id @default(uuid())
+  category_id String
+  category    master_categories @relation(fields: [category_id], references: [id])
+  name        String
+  description String?
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now())
+
+  wac_details wac_details[]
+}
+
+model wac_sessions {
+  id          String   @id @default(uuid())
+  vehicle_id  String
+  vehicle     vehicles @relation(fields: [vehicle_id], references: [id])
+  user_id     String
+  user        users    @relation(fields: [user_id], references: [id])
+  status      WacStatus @default(IN_PROGRESS)
+  is_wo_linked Boolean @default(false)
+  wo_number   String?
+  start_time  DateTime @default(now())
+  end_time    DateTime?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  details     wac_details[]
+  signatures  wac_signatures[]
+  photos      wac_photos[]
+}
+
+enum WacStatus {
+  IN_PROGRESS
+  COMPLETED
+  CHECKED_OUT
+  NEED_FOLLOW_UP
+}
+
+model wac_details {
+  id            String   @id @default(uuid())
+  session_id    String
+  session       wac_sessions @relation(fields: [session_id], references: [id])
+  check_item_id String
+  check_item    master_check_items @relation(fields: [check_item_id], references: [id])
+  status        ItemStatus @default(OK)
+  note          String?
+  voice_note_url String?
+  created_at    DateTime @default(now())
+}
+
+enum ItemStatus {
+  OK
+  NG
+  WARNING
+}
+
+model wac_photos {
+  id         String   @id @default(uuid())
+  session_id String
+  session    wac_sessions @relation(fields: [session_id], references: [id])
+  photo_url  String
+  part_name  String?
+  is_exterior Boolean @default(true)
+  created_at DateTime @default(now())
+}
+
+model wac_signatures {
+  id            String   @id @default(uuid())
+  session_id    String
+  session       wac_sessions @relation(fields: [session_id], references: [id])
+  signature_url String
+  signer_name   String
+  role          String
+  verified_at   DateTime @default(now())
+  gps_lat       Float?
+  gps_lng       Float?
+}
+
+model notifications {
+  id         String   @id @default(uuid())
+  title      String
+  message    String
+  is_read    Boolean  @default(false)
+  user_id    String?
+  created_at DateTime @default(now())
+}
+
+model activity_logs {
+  id         String   @id @default(uuid())
+  user_id    String
+  user       users    @relation(fields: [user_id], references: [id])
+  action     String
+  details    String?
+  created_at DateTime @default(now())
+}

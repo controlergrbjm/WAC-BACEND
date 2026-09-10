@@ -1,0 +1,31 @@
+{
+  "name": "wac-digital-backend",
+  "version": "1.0.0",
+  "description": "Next.js backend for WAC Digital App",
+  "scripts": {
+    "dev": "next dev -H 0.0.0.0 --webpack",
+    "build": "prisma generate && next build --webpack",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.0.0",
+    "@supabase/supabase-js": "^2.111.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.0",
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "winston": "^3.10.0",
+    "zod": "^3.21.4"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.2",
+    "@types/jsonwebtoken": "^9.0.2",
+    "@types/node": "^26.1.2",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "prisma": "^5.0.0",
+    "typescript": "^6.0.3"
+  }
+}

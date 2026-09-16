@@ -7,10 +7,49 @@ export const GET = async (req: AuthenticatedRequest) => {
     try {
       const userId = req.user!.id;
 
-      // 1. Fetch all wac_sessions for this user
+      const { searchParams } = new URL(req.url);
+      const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+      const limit = Math.max(1, parseInt(searchParams.get('limit') || '10', 10));
+      const search = (searchParams.get('search') || '').trim();
+      const statusFilter = (searchParams.get('status') || '').trim();
+      const myOnly = searchParams.get('myOnly') === 'true';
+
+      const whereClause: any = {};
+      if (myOnly) {
+        whereClause.user_id = userId;
+      }
+
+      if (statusFilter && statusFilter.toUpperCase() !== 'ALL') {
+        if (statusFilter.toUpperCase() === 'COMPLETED') {
+          whereClause.status = { in: ['COMPLETED', 'CHECKED_OUT'] };
+        } else if (statusFilter.toUpperCase() === 'IN PROGRESS' || statusFilter.toUpperCase() === 'IN_PROGRESS') {
+          whereClause.status = 'IN_PROGRESS';
+        } else if (statusFilter.toUpperCase() === 'FOLLOW UP' || statusFilter.toUpperCase() === 'NEED_FOLLOW_UP') {
+          whereClause.status = 'NEED_FOLLOW_UP';
+        } else {
+          whereClause.status = statusFilter;
+        }
+      }
+
+      if (search.length > 0) {
+        whereClause.OR = [
+          { vehicle: { license_plate: { contains: search, mode: 'insensitive' } } },
+          { vehicle: { model: { contains: search, mode: 'insensitive' } } },
+          { vehicle: { customer: { name: { contains: search, mode: 'insensitive' } } } },
+          { user: { name: { contains: search, mode: 'insensitive' } } },
+        ];
+      }
+
+      const total = await prisma.wac_sessions.count({ where: whereClause });
+      const totalPages = Math.max(1, Math.ceil(total / limit));
+      const skip = (page - 1) * limit;
+
+      // 1. Fetch wac_sessions with pagination
       const sessions = await prisma.wac_sessions.findMany({
-        where: { user_id: userId },
+        where: whereClause,
         orderBy: { created_at: 'desc' },
+        skip,
+        take: limit,
         include: {
           vehicle: {
             include: { customer: true }
@@ -69,7 +108,14 @@ export const GET = async (req: AuthenticatedRequest) => {
       });
 
       return NextResponse.json({
-        data: formattedHistory
+        success: true,
+        data: formattedHistory,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+        },
       }, { status: 200 });
 
     } catch (error: any) {

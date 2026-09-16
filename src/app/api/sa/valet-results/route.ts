@@ -7,11 +7,33 @@ import { withAuth, AuthenticatedRequest } from '../../../../../middleware/authMi
 export const GET = async (req: AuthenticatedRequest) => {
   return withAuth(req, async () => {
     try {
+      const { searchParams } = new URL(req.url);
+      const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+      const limit = Math.max(1, parseInt(searchParams.get('limit') || '10', 10));
+      const search = (searchParams.get('search') || '').trim();
+
+      const whereClause: any = {
+        status: { in: ['COMPLETED', 'CHECKED_OUT'] },
+      };
+
+      if (search.length > 0) {
+        whereClause.OR = [
+          { vehicle: { license_plate: { contains: search, mode: 'insensitive' } } },
+          { vehicle: { model: { contains: search, mode: 'insensitive' } } },
+          { vehicle: { customer: { name: { contains: search, mode: 'insensitive' } } } },
+          { user: { name: { contains: search, mode: 'insensitive' } } },
+        ];
+      }
+
+      const total = await prisma.wac_sessions.count({ where: whereClause });
+      const totalPages = Math.max(1, Math.ceil(total / limit));
+      const skip = (page - 1) * limit;
+
       const sessions = await prisma.wac_sessions.findMany({
-        where: {
-          status: { in: ['COMPLETED', 'CHECKED_OUT'] },
-        },
+        where: whereClause,
         orderBy: { created_at: 'desc' },
+        skip,
+        take: limit,
         include: {
           vehicle: {
             include: { customer: true },
@@ -94,7 +116,16 @@ export const GET = async (req: AuthenticatedRequest) => {
         };
       });
 
-      return NextResponse.json({ success: true, data: formatted }, { status: 200 });
+      return NextResponse.json({
+        success: true,
+        data: formatted,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+        },
+      }, { status: 200 });
     } catch (error: any) {
       console.error('SA valet results error:', error);
       return NextResponse.json(

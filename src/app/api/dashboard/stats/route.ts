@@ -28,48 +28,50 @@ export const GET = async (req: AuthenticatedRequest) => {
       const completed = sessionsToday.filter((s: any) => s.status === 'COMPLETED' || s.status === 'CHECKED_OUT').length;
       const waiting = Math.max(0, totalVehicles - inspection - completed);
 
-      // Ambil inspeksi aktif terbaru dari SEMUA user (jika ada)
-      const latestActiveSession = await prisma.wac_sessions.findFirst({
+      // Ambil SEMUA inspeksi aktif yang sedang berjalan (IN_PROGRESS) oleh tim Valet
+      const activeSessions = await prisma.wac_sessions.findMany({
         where: {
           status: 'IN_PROGRESS',
-          created_at: {
-            gte: startOfDay,
-            lte: endOfDay,
-          },
         },
         orderBy: {
-          created_at: 'desc',
+          start_time: 'desc',
         },
         include: {
-          vehicle: true,
+          vehicle: {
+            include: { customer: true },
+          },
           details: true,
           user: {
-            select: { name: true },
+            select: { name: true, nik: true },
           },
         },
       });
 
-      let activeInspection = null;
-      if (latestActiveSession) {
+      const activeInspections = activeSessions.map((session: any) => {
         const totalItemsAssumed = 40;
-        const progressRaw = latestActiveSession.details.length / totalItemsAssumed;
+        const progressRaw = session.details.length / totalItemsAssumed;
         const progress = Math.min(100, Math.round(progressRaw * 100));
 
-        activeInspection = {
-          sessionId: latestActiveSession.id,
-          licensePlate: latestActiveSession.vehicle.license_plate,
-          vehicleModel: latestActiveSession.vehicle.model,
+        return {
+          sessionId: session.id,
+          licensePlate: session.vehicle.license_plate,
+          vehicleModel: session.vehicle.model,
+          customerName: session.vehicle.customer?.name || 'Walk-In Customer',
           progress: progress,
-          inspectorName: latestActiveSession.user?.name ?? 'Unknown',
+          inspectorName: session.user?.name ?? 'Valet',
+          inspectorNik: session.user?.nik ?? '',
+          startTime: session.start_time,
+          detailsCount: session.details.length,
         };
-      }
+      });
 
       return NextResponse.json({
         totalVehicles,
         waiting,
         inspection,
         completed,
-        activeInspection,
+        activeInspection: activeInspections.length > 0 ? activeInspections[0] : null,
+        activeInspections,
       }, { status: 200 });
     } catch (error: any) {
       console.error('Error fetching dashboard stats:', error);

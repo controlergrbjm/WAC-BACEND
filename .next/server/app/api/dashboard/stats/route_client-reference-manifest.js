@@ -1,1 +1,0 @@
-globalThis.__RSC_MANIFEST=(globalThis.__RSC_MANIFEST||{});globalThis.__RSC_MANIFEST["/api/dashboard/stats/route"]={"moduleLoading":{"prefix":"/_next/"},"ssrModuleMapping":{},"edgeSSRModuleMapping":{},"clientModules":{},"entryCSSFiles":{"C:\\APLIKASI ANDROID WAC DIGITAL\\backend\\src\\app\\api\\dashboard\\stats\\route":[]},"rscModuleMapping":{},"edgeRscModuleMapping":{}};

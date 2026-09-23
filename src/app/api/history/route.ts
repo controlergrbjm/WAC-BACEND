@@ -124,3 +124,60 @@ export const GET = async (req: AuthenticatedRequest) => {
     }
   });
 };
+
+export const DELETE = async (req: AuthenticatedRequest) => {
+  // Hanya user dengan role VALET yang berhak menghapus riwayat WAC
+  return withAuth(req, async (authReq) => {
+    try {
+      const { searchParams } = new URL(authReq.url);
+      let sessionId = searchParams.get('id') || searchParams.get('sessionId');
+
+      if (!sessionId) {
+        try {
+          const body = await authReq.json();
+          sessionId = body.id || body.sessionId;
+        } catch (_) {}
+      }
+
+      if (!sessionId) {
+        return NextResponse.json(
+          { success: false, message: 'Session ID wajib disertakan' },
+          { status: 400 }
+        );
+      }
+
+      // Pastikan session ada di database
+      const existingSession = await prisma.wac_sessions.findUnique({
+        where: { id: sessionId },
+      });
+
+      if (!existingSession) {
+        return NextResponse.json(
+          { success: false, message: 'Riwayat WAC tidak ditemukan' },
+          { status: 404 }
+        );
+      }
+
+      // Hapus data relasi terkait dalam sebuah transaksi
+      await prisma.$transaction([
+        prisma.wac_details.deleteMany({ where: { session_id: sessionId } }),
+        prisma.wac_signatures.deleteMany({ where: { session_id: sessionId } }),
+        prisma.wac_photos.deleteMany({ where: { session_id: sessionId } }),
+        prisma.wac_sessions.delete({ where: { id: sessionId } }),
+      ]);
+
+      return NextResponse.json({
+        success: true,
+        message: 'Riwayat WAC berhasil dihapus oleh Valet',
+      }, { status: 200 });
+
+    } catch (error: any) {
+      console.error('Error deleting history session:', error);
+      return NextResponse.json(
+        { success: false, message: 'Gagal menghapus riwayat WAC', error: error.message },
+        { status: 500 }
+      );
+    }
+  }, ['VALET']);
+};
+

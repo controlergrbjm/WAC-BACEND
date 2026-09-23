@@ -13,15 +13,25 @@ export const GET = async (req: AuthenticatedRequest) => {
       const search = (searchParams.get('search') || '').trim();
 
       const whereClause: any = {
-        status: { in: ['COMPLETED', 'CHECKED_OUT'] },
+        OR: [
+          { status: { in: ['COMPLETED', 'CHECKED_OUT'] } },
+          {
+            status: 'IN_PROGRESS',
+            details: { some: {} }, // Sudah ada hasil inspeksi/checklist
+          },
+        ],
       };
 
       if (search.length > 0) {
-        whereClause.OR = [
-          { vehicle: { license_plate: { contains: search, mode: 'insensitive' } } },
-          { vehicle: { model: { contains: search, mode: 'insensitive' } } },
-          { vehicle: { customer: { name: { contains: search, mode: 'insensitive' } } } },
-          { user: { name: { contains: search, mode: 'insensitive' } } },
+        whereClause.AND = [
+          {
+            OR: [
+              { vehicle: { license_plate: { contains: search, mode: 'insensitive' } } },
+              { vehicle: { model: { contains: search, mode: 'insensitive' } } },
+              { vehicle: { customer: { name: { contains: search, mode: 'insensitive' } } } },
+              { user: { name: { contains: search, mode: 'insensitive' } } },
+            ],
+          },
         ];
       }
 

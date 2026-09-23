@@ -5,7 +5,7 @@ import { withAuth, AuthenticatedRequest } from '../../../../../middleware/authMi
 
 const schema = z.object({
   sessionId: z.string().uuid(),
-  signatureUrl: z.string().url().optional(),
+  signatureUrl: z.string().optional(),
   signerName: z.string().optional(),
   role: z.string().optional(),
 });
